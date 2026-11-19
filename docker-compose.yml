@@ -1,0 +1,40 @@
+services:
+  web:
+    build: .
+    container_name: smart-city-web
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in your .env file}
+      DB_NAME: ${DB_NAME:-smartcity}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - smartcity-network
+
+  db:
+    image: mysql:8.4
+    container_name: smart-city-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in your .env file}
+      MYSQL_DATABASE: ${DB_NAME:-smartcity}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - smartcity-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$${MYSQL_ROOT_PASSWORD}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  smartcity-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

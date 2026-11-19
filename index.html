@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City Jember</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef3f8;
+            color: #1e293b;
+        }
+
+        header {
+            background: #123b64;
+            color: white;
+            padding: 25px 8%;
+        }
+
+        header h1 {
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #cbdcec;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .heading {
+            margin-bottom: 25px;
+        }
+
+        .heading h2 {
+            margin-bottom: 8px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(200px, 1fr)
+            );
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px #0000000d;
+        }
+
+        .card p {
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            font-size: 30px;
+            color: #123b64;
+            overflow-wrap: anywhere;
+        }
+
+        .status {
+            color: #15803d !important;
+        }
+
+        .identity {
+            margin-top: 25px;
+            padding: 20px;
+            background: #dceafe;
+            border-radius: 12px;
+            line-height: 1.7;
+        }
+
+        .identity h3 {
+            margin-bottom: 5px;
+        }
+
+        .updated {
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 22px 6%;
+            }
+
+            header h1 {
+                font-size: 21px;
+            }
+
+            main {
+                margin: 25px auto;
+            }
+
+            .card h3 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>SMART CITY KABUPATEN JEMBER</h1>
+        <p>Sistem Monitoring Sensor Cuaca Kota Jember</p>
+    </header>
+
+    <main>
+
+        <div class="heading">
+            <h2>Status Sensor Cuaca Kota Jember</h2>
+            <p>Informasi pemantauan suhu dan kelembapan lingkungan.</p>
+        </div>
+
+        <section class="cards">
+
+            <div class="card">
+                <p>🌡️ Suhu Udara</p>
+                <h3 id="suhu">Memuat...</h3>
+            </div>
+
+            <div class="card">
+                <p>💧 Kelembapan</p>
+                <h3 id="kelembapan">Memuat...</h3>
+            </div>
+
+            <div class="card">
+                <p>📡 Status Sensor</p>
+                <h3 class="status" id="sensor">Memuat...</h3>
+            </div>
+
+            <div class="card">
+                <p>🌤️ Kondisi Cuaca</p>
+                <h3 class="status" id="status">Memuat...</h3>
+            </div>
+
+        </section>
+
+        <div class="identity">
+            <h3>Identitas Mahasiswa</h3>
+            <p>Nama: <strong id="nama">Memuat...</strong></p>
+            <p>NIM: <strong id="nim">Memuat...</strong></p>
+        </div>
+
+        <div class="updated">
+            Terakhir diperbarui:
+            <strong id="waktu">-</strong>
+        </div>
+
+    </main>
+
+    <footer>
+        Smart City Jember | Containerization Project
+    </footer>
+
+    <script>
+
+        async function loadData() {
+
+            try {
+
+                // Mengambil data dari API Node.js dan MySQL
+                const response = await fetch("/api/logs");
+
+                if (!response.ok) {
+                    throw new Error("Gagal mengambil data dari server");
+                }
+
+                const data = await response.json();
+
+                // Memeriksa apakah database memiliki data
+                if (!Array.isArray(data) || data.length === 0) {
+
+                    document.getElementById("suhu").textContent = "-- °C";
+                    document.getElementById("kelembapan").textContent = "-- %";
+                    document.getElementById("sensor").textContent = "Tidak Ada Data";
+                    document.getElementById("status").textContent = "Menunggu Data";
+                    document.getElementById("nama").textContent = "-";
+                    document.getElementById("nim").textContent = "-";
+                    document.getElementById("waktu").textContent = "-";
+
+                    return;
+                }
+
+                // Mengambil data sensor terbaru
+                const latest = data[0];
+
+                // Menampilkan suhu
+                document.getElementById("suhu").textContent =
+                    latest.suhu + " °C";
+
+                // Menampilkan kelembapan
+                document.getElementById("kelembapan").textContent =
+                    latest.kelembapan + " %";
+
+                // Menampilkan status sensor
+                document.getElementById("sensor").textContent =
+                    "Terhubung";
+
+                // Menentukan kondisi berdasarkan suhu
+                let kondisi;
+
+                if (latest.suhu >= 30) {
+                    kondisi = "Panas";
+                } else if (latest.suhu <= 24) {
+                    kondisi = "Sejuk";
+                } else {
+                    kondisi = "Normal";
+                }
+
+                document.getElementById("status").textContent =
+                    kondisi;
+
+                // Menampilkan identitas mahasiswa dari database
+                document.getElementById("nama").textContent =
+                    latest.nama;
+
+                document.getElementById("nim").textContent =
+                    latest.nim;
+
+                // Menampilkan waktu pencatatan
+                const waktu = new Date(latest.waktu);
+
+                document.getElementById("waktu").textContent =
+                    waktu.toLocaleString("id-ID", {
+                        dateStyle: "medium",
+                        timeStyle: "medium"
+                    });
+
+            } catch (error) {
+
+                console.error("Gagal mengambil data:", error);
+
+                document.getElementById("sensor").textContent =
+                    "Koneksi Error";
+
+            }
+
+        }
+
+        // Memuat data ketika halaman dibuka
+        loadData();
+
+        // Memperbarui data setiap 5 detik
+        setInterval(loadData, 5000);
+
+    </script>
+
+</body>
+</html>
